@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-16">
       <div className="w-full max-w-xl space-y-6 rounded-2xl bg-white p-10 shadow-lg">
-        <h1 className="text-center text-2xl font-bold text-slate-900">알맹 상정 · 빠른 이동</h1>
+        <h1 className="text-center text-2xl font-bold text-slate-900">알맹상점 · 빠른 이동</h1>
         <div className="grid gap-3">
           <Link
             href="/receipts/rcpt_123"
@@ -23,6 +23,12 @@ export default function Home() {
             className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
           >
             관리자 대시보드
+          </Link>
+          <Link
+            href="/pos"
+            className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-500"
+          >
+            POS 시스템
           </Link>
           <Link
             href="/api/auth/kakao/login"

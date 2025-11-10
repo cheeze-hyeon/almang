@@ -9,6 +9,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// 개발 환경에서 SSL 검증 문제 해결을 위한 커스텀 fetch
+const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
+  // 개발 환경에서만 SSL 검증 비활성화
+  if (process.env.NODE_ENV === 'development') {
+    // Node.js 환경에서는 https 모듈을 사용하여 SSL 검증 우회
+    if (typeof window === 'undefined') {
+      const https = require('https');
+      const agent = new https.Agent({
+        rejectUnauthorized: false,
+      });
+      
+      // fetch 옵션에 agent 추가 (Node.js 18+ fetch는 agent를 직접 지원하지 않으므로
+      // 다른 방법이 필요할 수 있습니다)
+    }
+  }
+  
+  return fetch(url, options);
+};
+
 /**
  * Supabase 클라이언트는 브라우저와 서버 모두에서 사용 가능합니다.
  * 다만, 민감한 서비스 키는 절대 클라이언트 번들에 포함하지 말고
@@ -23,4 +42,8 @@ export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
   },
+  // 개발 환경에서 SSL 검증 문제가 있는 경우
+  // global: {
+  //   fetch: customFetch, // Supabase JS v2에서는 직접 fetch 옵션 지원이 제한적
+  // },
 });
