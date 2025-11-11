@@ -5,4 +5,8 @@ export type Product = {
   category?: string;
   composition?: string; // 성분 요약 텍스트
   ecoInfo?: string; // 친환경 관련 설명
+
+  stockM1: number;
+  unitPricePerMl: number;
+  status: "active" | "inactive" | "soldout";
 };

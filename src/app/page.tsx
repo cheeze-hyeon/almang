@@ -25,7 +25,7 @@ export default function Home() {
             관리자 대시보드
           </Link>
           <Link
-            href="/pos"
+            href="/pos/customer"
             className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-500"
           >
             POS 시스템
