@@ -4,6 +4,10 @@
   --background: #ffffff;
   --foreground: #171717;
 }
+html,
+body {
+  font-family: var(--font-ui);
+}
 
 @theme inline {
   --color-background: var(--background);
