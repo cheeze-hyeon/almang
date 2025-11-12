@@ -3,10 +3,10 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Product, ProductCategory, Customer, CartItem } from "@/types";
-import SidebarDummy from "@/components/POS/SidebarDummy";
 import CatalogPanel from "@/components/POS/CatalogPanel";
 import OrderPanel from "@/components/POS/OrderPanel";
 import QuantityModal, { Unit } from "@/components/POS/QuantityModal";
+import Header from "@/components/POS/Header";
 
 type CartRow = CartItem & { id: string };
 
@@ -64,9 +64,8 @@ function CheckoutContent() {
   const addToCart = ({ volume, unit }: { volume: number; unit: Unit }) => {
     if (!modalTarget) return;
     const volMl = volume; // g/ml 동일 단가 가정
-    // current_price는 전체 가격이므로, ml당 단가를 계산 (임시로 1000ml 기준)
-    // 실제로는 데이터베이스에 ml당 단가를 저장하거나 별도 계산 로직 필요
-    const unitPricePerMl = modalTarget.current_price ? modalTarget.current_price / 1000 : 0;
+    // current_price는 이미 ml당 단가이므로 그대로 사용
+    const unitPricePerMl = modalTarget.current_price || 0;
     const amount = volMl * unitPricePerMl;
     const row: CartRow = {
       id: `${modalTarget.id}_${Date.now()}`,
@@ -75,6 +74,7 @@ function CheckoutContent() {
       volumeMl: volMl,
       unitPricePerMl,
       amount,
+      measureUnit: modalTarget.measure_unit,
     };
     setCart((prev) => [...prev, row]);
   };
@@ -99,21 +99,24 @@ function CheckoutContent() {
   }, [cart]);
 
   return (
-    <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto max-w-[1200px] xl:max-w-[1400px] p-4">
-        <div className="grid grid-cols-12 gap-4">
-          {/* 좌측 더미 사이드바 */}
-          <SidebarDummy />
+    <main className="min-h-screen bg-[#F2F2F7] flex flex-col">
+      {/* 헤더 */}
+      <Header />
 
-          {/* 중앙 상품 카탈로그 */}
+      {/* 메인 컨텐츠 */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 px-4 md:px-6 lg:px-8 pb-6 md:pb-8">
+        {/* 상품 카탈로그 */}
+        <div className="flex-1 min-w-0">
           <CatalogPanel
             products={products}
             activeCat={activeCat}
             onChangeCat={setActiveCat}
             onPick={pickProduct}
           />
+        </div>
 
-          {/* 우측 주문 패널 */}
+        {/* 우측 주문 패널 */}
+        <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
           <OrderPanel
             customer={customer}
             cart={cart}
@@ -133,8 +136,8 @@ function CheckoutContent() {
           setModalTarget(null);
         }}
         onConfirm={addToCart}
-        defaultUnit="g"
-        unitPrice={modalTarget?.current_price ? modalTarget.current_price / 1000 : 0}
+        defaultUnit={(modalTarget?.measure_unit as Unit) || "g"}
+        unitPrice={modalTarget?.current_price || 0}
       />
     </main>
   );
@@ -142,11 +145,13 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-slate-600">로딩 중...</div>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-100 flex items-center justify-center">
+          <div className="text-slate-600">로딩 중...</div>
+        </main>
+      }
+    >
       <CheckoutContent />
     </Suspense>
   );

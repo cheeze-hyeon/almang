@@ -4,4 +4,5 @@ export interface CartItem {
   volumeMl: number;
   unitPricePerMl: number;
   amount: number;
+  measureUnit: "ml" | "g" | null;
 }

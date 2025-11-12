@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { Customer, CartItem } from "@/types";
 
 type CartRow = CartItem & { id: string };
@@ -19,67 +20,118 @@ export default function OrderPanel({
   discount?: number;
   onPay: () => void;
 }) {
+  const router = useRouter();
+  const unitPricePerMl = cart.length > 0 ? cart[0].unitPricePerMl : 0;
+  const formatUnitPrice = (price: number, measureUnit: "ml" | "g" | null) => {
+    const unit = measureUnit || "g";
+    return `${Math.round(price)}원/${unit}`;
+  };
+
   return (
-    <aside className="col-span-4">
-      <div className="sticky top-4 rounded-2xl bg-white shadow p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Orders</h2>
-          <div className="text-slate-500 text-sm">{customer?.name ?? "고객 선택 없음"}</div>
+    <div className="w-full min-h-[600px] rounded-lg bg-white shadow-sm flex flex-col lg:sticky lg:top-4">
+      {/* 헤더 */}
+      <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 border-b border-black">
+        <div className="flex justify-between items-center">
+          <p className="text-base font-semibold text-black">품목</p>
+          <p className="text-base font-semibold text-black">가격</p>
         </div>
-        <hr className="my-3" />
+      </div>
 
-        {/* 장바구니 */}
-        <div className="space-y-3 max-h-[420px] overflow-auto pr-1">
-          {cart.length === 0 ? (
-            <p className="text-slate-400 text-sm">왼쪽에서 상품을 선택해 담아주세요.</p>
-          ) : (
-            cart.map((row) => (
-              <div key={row.id} className="flex items-center gap-3">
-                {/* 썸네일 자리 */}
-                <div className="w-10 h-10 rounded bg-slate-200 flex items-center justify-center text-xs text-slate-500">
-                  IMG
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium line-clamp-1">{row.name}</div>
-                  <div className="text-xs text-slate-500">친환경/비건</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm">{row.volumeMl}g</div>
-                  <div className="text-sm tabular-nums">{row.amount.toLocaleString()}</div>
-                </div>
-                <button
-                  onClick={() => onRemove(row.id)}
-                  className="w-9 h-9 rounded-xl border text-rose-500 border-rose-200 hover:bg-rose-50"
-                >
-                  🗑️
-                </button>
+      {/* 장바구니 아이템들 */}
+      <div className="flex-1 px-4 md:px-6 py-4 space-y-4 overflow-y-auto min-h-0">
+        {cart.length === 0 ? (
+          <p className="text-slate-400 text-sm text-center py-8">왼쪽에서 상품을 선택해 담아주세요.</p>
+        ) : (
+          cart.map((row, index) => (
+            <div
+              key={row.id}
+              className="w-full min-h-[88px] p-3 rounded-[10px] bg-[#f2f2f7] relative"
+            >
+              {/* 제품명 */}
+              <p className="text-base md:text-[17px] font-medium text-black mb-1 pr-8">
+                {row.name}
+              </p>
+
+              {/* 단가 */}
+              <p className="text-sm md:text-[15px] font-medium text-[#e04f4e] mb-2">
+                {formatUnitPrice(row.unitPricePerMl, row.measureUnit)}
+              </p>
+
+              {/* 하단: 무게 + 가격 */}
+              <div className="flex justify-between items-center">
+                <p className="text-sm md:text-[15px] font-medium text-[#959595]">
+                  {row.volumeMl}{row.measureUnit || "g"}
+                </p>
+                <p className="text-base md:text-[17px] font-medium text-black">
+                  {Math.round(row.amount).toLocaleString()}원
+                </p>
               </div>
-            ))
-          )}
-        </div>
 
-        <hr className="my-3" />
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">Discount</span>
-            <span className="tabular-nums">{discount.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">Sub total</span>
-            <span className="tabular-nums font-semibold">
-              {(subTotal - discount).toLocaleString()}
-            </span>
-          </div>
-        </div>
+              {/* 삭제 버튼 */}
+              <button
+                onClick={() => onRemove(row.id)}
+                className="absolute right-2 top-2 w-7 h-7 md:w-[29px] md:h-[29px] flex items-center justify-center"
+              >
+                <svg
+                  width="29"
+                  height="29"
+                  viewBox="0 0 29 29"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <circle cx="14.5" cy="14.5" r="10.875" fill="#E04F4E" />
+                  <path d="M9.0625 14.5H19.9375" stroke="white" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </div>
+          ))
+        )}
+      </div>
 
+      {/* 고객 정보 입력 버튼 */}
+      <div className="px-4 md:px-6 pb-4">
         <button
-          onClick={onPay}
-          disabled={!customer || cart.length === 0}
-          className="mt-4 w-full rounded-xl bg-rose-500 hover:bg-rose-400 text-white py-3 disabled:opacity-50"
+          onClick={() => router.push("/pos/customer")}
+          className="flex justify-center items-center w-full gap-2 p-3.5 rounded-lg bg-[#70bce8] text-white hover:bg-[#5aa8d0] transition-colors"
+          style={{ boxShadow: "0px 8px 24px 0 rgba(192,230,252,0.5)" }}
         >
-          결제하기
+          <p className="text-sm font-semibold">고객 정보 입력</p>
         </button>
       </div>
-    </aside>
+
+      {/* 하단 구분선 */}
+      <div className="border-t border-black mx-4 md:mx-6"></div>
+
+      {/* 할인 + 총액 */}
+      <div className="px-4 md:px-6 py-4 space-y-2">
+        <div className="flex justify-between items-center">
+          <p className="text-base md:text-lg font-bold text-black">할인</p>
+          <p className="text-base md:text-lg font-medium text-black">
+            {discount.toLocaleString()}
+          </p>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-base md:text-lg font-bold text-black">총액</p>
+          <p className="text-base md:text-lg font-medium text-black">
+            {(subTotal - discount).toLocaleString()}원
+          </p>
+        </div>
+      </div>
+
+      {/* 버튼들 */}
+      <div className="px-4 md:px-6 pb-4 md:pb-6">
+        {/* 데이터 전송하기 버튼 */}
+        <button
+          onClick={onPay}
+          disabled={cart.length === 0}
+          className="flex justify-center items-center w-full gap-2 p-3.5 rounded-lg bg-[#e75251] text-white hover:bg-[#d43f3e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ boxShadow: "0px 8px 24px 0 rgba(234,124,105,0.3)" }}
+        >
+          <p className="text-sm font-semibold">데이터 전송하기</p>
+        </button>
+      </div>
+    </div>
   );
 }

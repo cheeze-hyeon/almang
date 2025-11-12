@@ -11,6 +11,8 @@ export type Product = {
   id: number;
   name: string | null;
   short_description: string | null;
+  brand: string | null;
+  measure_unit: "ml" | "g" | null;
   ingredients: string | null;
   environmental_contribution: string | null;
   category: string | null;
