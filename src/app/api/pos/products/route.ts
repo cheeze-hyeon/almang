@@ -8,6 +8,7 @@ const mockProducts = [
     stockMl: 12000,
     unitPricePerMl: 20,
     status: "on",
+    category: "shampoo",
   },
   {
     id: "prd_detergent",
@@ -15,6 +16,7 @@ const mockProducts = [
     stockMl: 8000,
     unitPricePerMl: 20,
     status: "on",
+    category: "detergent",
   },
   {
     id: "prd_conditioner",
@@ -22,6 +24,7 @@ const mockProducts = [
     stockMl: 10000,
     unitPricePerMl: 25,
     status: "on",
+    catergory: "shampoo",
   },
   {
     id: "prd_shamp_rosemary",

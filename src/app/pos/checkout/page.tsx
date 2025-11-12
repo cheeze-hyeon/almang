@@ -28,11 +28,11 @@ export default function CheckoutPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTarget, setModalTarget] = useState<Product | null>(null);
 
+  // 🔸 고객 + 상품 불러오기
   useEffect(() => {
     if (!customerId) return;
     (async () => {
       try {
-        // 고객은 id/phone 둘 다 대응 가능한 핸들러가 이상적
         const [cR, pR] = await Promise.all([
           fetch(`/api/pos/customers?id=${customerId}`).then((r) => (r.ok ? r.json() : null)),
           fetch(`/api/pos/products`).then((r) => r.json()),
@@ -45,11 +45,13 @@ export default function CheckoutPage() {
     })();
   }, [customerId]);
 
+  // 🔸 상품 선택 시 모달 오픈
   const pickProduct = (p: Product) => {
     setModalTarget(p);
     setModalOpen(true);
   };
 
+  // 🔸 장바구니 추가
   const addToCart = ({ volume, unit }: { volume: number; unit: Unit }) => {
     if (!modalTarget) return;
     const volMl = volume; // g/ml 동일 단가 가정
@@ -65,32 +67,33 @@ export default function CheckoutPage() {
     setCart((prev) => [...prev, row]);
   };
 
+  // 🔸 장바구니 아이템 제거
   const removeRow = (id: string) => setCart((prev) => prev.filter((i) => i.id !== id));
 
-  const pay = async () => {
-    if (!customer || cart.length === 0) return;
-    const body = { customerId: customer.id, items: cart, totalAmount: subTotal - discount };
-    const r = await fetch("/api/pos/payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await r.json();
-    if (r.ok) {
-      alert(`결제 완료: ${data.receipt.id}`);
-      setCart([]);
-      router.replace("/pos/customer");
-    } else {
-      alert(data.error ?? "결제 실패");
-    }
+  // 🔸 고객 전화번호 입력 페이지로 이동 (결제 대체)
+  const goToPhoneInput = () => {
+    if (cart.length === 0) return alert("장바구니가 비어 있습니다.");
+    // 장바구니 데이터를 localStorage에 저장
+    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem("total", String(subTotal - discount));
+
+    // 고객 전화번호 입력 페이지로 이동
+    router.push(`/pos/customer`);
   };
+
+  // 🔸 localStorage에 장바구니 자동 저장 (새로고침 대비)
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="mx-auto max-w-[1200px] xl:max-w-[1400px] p-4">
         <div className="grid grid-cols-12 gap-4">
+          {/* 좌측 더미 사이드바 */}
           <SidebarDummy />
 
+          {/* 중앙 상품 카탈로그 */}
           <CatalogPanel
             products={products}
             activeCat={activeCat}
@@ -98,17 +101,19 @@ export default function CheckoutPage() {
             onPick={pickProduct}
           />
 
+          {/* 우측 주문 패널 */}
           <OrderPanel
             customer={customer}
             cart={cart}
             onRemove={removeRow}
             subTotal={subTotal}
             discount={discount}
-            onPay={pay}
+            onPay={goToPhoneInput} // ✅ 결제 대신 고객입력 페이지 이동
           />
         </div>
       </div>
 
+      {/* 용량 입력 모달 */}
       <QuantityModal
         open={modalOpen}
         onClose={() => {

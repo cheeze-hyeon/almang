@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 
 export default function POSIndex() {
-  redirect("/pos/customer"); // ✅ POS 진입 시 항상 고객 조회/가입 화면으로
+  // ✅ 이제 POS 진입 시, 운영자가 상품을 입력하는 checkout 화면으로 이동
+  redirect("/pos/checkout");
   return null;
 }
