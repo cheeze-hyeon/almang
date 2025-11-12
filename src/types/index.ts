@@ -1,6 +1,6 @@
 export type { Customer } from "./customer";
 export type { CustomerLoyalty } from "./customer_loyalty";
-export type { Product } from "./product";
+export type { Product, ProductCategory } from "./product";
 export type { Receipt, ReceiptItem } from "./receipt";
 export type { CartItem } from "./cart";
 export type {

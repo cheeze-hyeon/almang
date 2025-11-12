@@ -64,13 +64,16 @@ export default function CheckoutPage() {
   const addToCart = ({ volume, unit }: { volume: number; unit: Unit }) => {
     if (!modalTarget) return;
     const volMl = volume; // g/ml 동일 단가 가정
-    const amount = volMl * modalTarget.unitPricePerMl;
+    // current_price는 전체 가격이므로, ml당 단가를 계산 (임시로 1000ml 기준)
+    // 실제로는 데이터베이스에 ml당 단가를 저장하거나 별도 계산 로직 필요
+    const unitPricePerMl = modalTarget.current_price ? modalTarget.current_price / 1000 : 0;
+    const amount = volMl * unitPricePerMl;
     const row: CartRow = {
       id: `${modalTarget.id}_${Date.now()}`,
-      productId: modalTarget.id,
-      name: modalTarget.name,
+      productId: String(modalTarget.id),
+      name: modalTarget.name || "상품명 없음",
       volumeMl: volMl,
-      unitPricePerMl: modalTarget.unitPricePerMl,
+      unitPricePerMl,
       amount,
     };
     setCart((prev) => [...prev, row]);
@@ -131,7 +134,7 @@ export default function CheckoutPage() {
         }}
         onConfirm={addToCart}
         defaultUnit="g"
-        unitPrice={modalTarget?.unitPricePerMl ?? 0}
+        unitPrice={modalTarget?.current_price ? modalTarget.current_price / 1000 : 0}
       />
     </main>
   );

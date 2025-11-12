@@ -1,24 +1,22 @@
 import { NextResponse } from "next/server";
+import { supabaseClient } from "@/lib/supabase-client";
+import type { Customer } from "@/types/customer";
 
 export async function GET() {
-  return NextResponse.json([
-    {
-      id: "cust_001",
-      name: "김민수",
-      totalSpent: 182000,
-      refillCount: 12,
-      co2SavedKg: 3.2,
-      grade: "Green",
-      lastVisit: new Date().toISOString(),
-    },
-    {
-      id: "cust_002",
-      name: "박지현",
-      totalSpent: 76000,
-      refillCount: 5,
-      co2SavedKg: 1.2,
-      grade: "Leaf",
-      lastVisit: new Date().toISOString(),
-    },
-  ]);
+  try {
+    const { data, error } = await supabaseClient
+      .from("customer")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json({ error: "고객 조회 중 오류가 발생했습니다." }, { status: 500 });
+    }
+
+    return NextResponse.json(data as Customer[]);
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    return NextResponse.json({ error: "고객 조회 중 오류가 발생했습니다." }, { status: 500 });
+  }
 }

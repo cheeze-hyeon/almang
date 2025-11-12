@@ -12,6 +12,7 @@ interface CatalogPanelProps {
 
 const CATEGORY_LABELS: Record<ProductCategory, string> = {
   shampoo: "샴푸",
+  conditioner: "컨디셔너",
   body_handwash: "바디워시/핸드워시",
   lotion_oil: "로션/오일",
   cream_balm_gel_pack: "크림/팩",
@@ -70,12 +71,16 @@ export default function CatalogPanel({
               </div>
 
               <div className="font-semibold leading-tight">
-                {p.brand ? `${p.brand} ` : ""}
-                {p.name}
+                {p.name || "상품명 없음"}
               </div>
               <div className="text-sm text-slate-500 mt-1">
-                {p.unitPricePerMl.toLocaleString()}원/ml
+                {p.current_price ? `${p.current_price.toLocaleString()}원` : "가격 정보 없음"}
               </div>
+              {p.short_description && (
+                <div className="text-xs text-slate-400 mt-1 line-clamp-2">
+                  {p.short_description}
+                </div>
+              )}
             </button>
           ))}
         </div>

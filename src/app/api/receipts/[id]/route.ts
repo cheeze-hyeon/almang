@@ -1,36 +1,59 @@
 import { NextResponse } from "next/server";
-import type { Receipt } from "@/types/receipt";
-
-// TODO: Supabase 연동으로 교체
-const mockReceipt: Receipt = {
-  id: "rcpt_123",
-  customerId: "cust_001",
-  paidAt: new Date().toISOString(),
-  totalAmount: 9800,
-  items: [
-    {
-      id: "itm_1",
-      productId: "prd_olive",
-      name: "올리브 샴푸",
-      volumeMl: 350,
-      unitPricePerMl: 20,
-      amount: 7000,
-    },
-    {
-      id: "itm_2",
-      productId: "prd_detergent",
-      name: "에코 세제",
-      volumeMl: 140,
-      unitPricePerMl: 20,
-      amount: 2800,
-      discount: 0,
-    },
-  ],
-};
+import { supabaseClient } from "@/lib/supabase-client";
+import type { Receipt, ReceiptItem } from "@/types/receipt";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  // 실제 구현: Supabase에서 id로 조회
-  const data = { ...mockReceipt, id } as Receipt;
-  return NextResponse.json(data);
+  try {
+    const { id } = await params;
+    const receiptId = parseInt(id, 10);
+
+    if (isNaN(receiptId)) {
+      return NextResponse.json({ error: "Invalid receipt ID" }, { status: 400 });
+    }
+
+    // Receipt 조회
+    const { data: receipt, error: receiptError } = await supabaseClient
+      .from("receipt")
+      .select("*")
+      .eq("id", receiptId)
+      .single();
+
+    if (receiptError) {
+      console.error("Supabase error:", receiptError);
+      return NextResponse.json({ error: "영수증을 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    // ReceiptItem 조회 (product 정보 포함)
+    const { data: items, error: itemsError } = await supabaseClient
+      .from("receipt_item")
+      .select(
+        `
+        *,
+        product:product_id (
+          id,
+          name
+        )
+      `,
+      )
+      .eq("receipt_id", receiptId);
+
+    if (itemsError) {
+      console.error("Supabase error:", itemsError);
+      return NextResponse.json({ error: "영수증 항목 조회 중 오류가 발생했습니다." }, { status: 500 });
+    }
+
+    // product 정보를 각 item에 추가
+    const itemsWithProduct = (items || []).map((item: any) => ({
+      ...item,
+      name: item.product?.name || null,
+    }));
+
+    return NextResponse.json({
+      ...(receipt as Receipt),
+      items: itemsWithProduct,
+    });
+  } catch (error) {
+    console.error("Error fetching receipt:", error);
+    return NextResponse.json({ error: "영수증 조회 중 오류가 발생했습니다." }, { status: 500 });
+  }
 }

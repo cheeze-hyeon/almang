@@ -1,5 +1,6 @@
 export type ProductCategory =
   | "shampoo" // 샴푸
+  | "conditioner" // 컨디셔너
   | "body_handwash" // 바디워시/핸드워시
   | "lotion_oil" // 로션/오일
   | "cream_balm_gel_pack" // 크림/밤/젤/팩

@@ -34,12 +34,9 @@ export default function CustomerPage() {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch(`/api/pos/customers?phone=${encodeURIComponent(phone)}`);
-      if (!r.ok) throw await r.json();
-      const c: Customer = await r.json();
-
-      // 결제(서버 저장) 요청
-      await saveOrder(c.id);
+      // TODO: phone으로 고객 조회하는 API가 필요함 (현재는 id만 지원)
+      // 임시로 신규 등록으로 처리
+      setError("전화번호 검색은 아직 지원되지 않습니다. 신규 등록을 이용해주세요.");
     } catch (e: any) {
       setError(e?.error ?? "고객을 찾을 수 없습니다. 신규 등록해 주세요.");
     } finally {
@@ -63,7 +60,7 @@ export default function CustomerPage() {
       const c: Customer = await r.json();
 
       // 등록 후 바로 결제 데이터 저장
-      await saveOrder(c.id);
+      await saveOrder(String(c.id));
     } catch (e: any) {
       setError(e?.error ?? "고객 등록에 실패했습니다.");
     } finally {
@@ -72,7 +69,7 @@ export default function CustomerPage() {
   };
 
   // 🔹 서버에 결제 데이터 저장 (실제 결제는 아님)
-  const saveOrder = async (customerId: string) => {
+  const saveOrder = async (customerId: string | number) => {
     if (cart.length === 0) {
       alert("결제할 상품이 없습니다.");
       return;

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { getBaseUrl } from "@/lib/env";
+import type { Product } from "@/types/product";
+import type { Customer } from "@/types/customer";
+import type { CustomerLoyalty } from "@/types/customer_loyalty";
 
 type Metrics = {
   totalCustomers: number;
@@ -10,22 +13,10 @@ type Metrics = {
 
 type Sales = { labels: string[]; values: number[] };
 
-type AdminProduct = {
-  id: string;
-  name: string;
-  stockMl: number;
-  unitPricePerMl: number;
-  status: string;
-};
+type AdminProduct = Product;
 
-type AdminCustomer = {
-  id: string;
-  name: string;
-  totalSpent: number;
-  refillCount: number;
-  co2SavedKg: number;
-  grade: string;
-  lastVisit: string;
+type AdminCustomer = Customer & {
+  loyalty?: CustomerLoyalty;
 };
 
 async function getMetrics(): Promise<Metrics> {
@@ -59,9 +50,7 @@ async function getSales(): Promise<Sales> {
 }
 
 async function getProducts(): Promise<AdminProduct[]> {
-  const fallback: AdminProduct[] = [
-    { id: "prd_olive", name: "올리브 샴푸", stockMl: 12000, unitPricePerMl: 20, status: "on" },
-  ];
+  const fallback: AdminProduct[] = [];
   try {
     const res = await fetch(`${getBaseUrl()}/api/admin/products`, { cache: "no-store" });
     if (!res.ok) return fallback;
@@ -72,21 +61,13 @@ async function getProducts(): Promise<AdminProduct[]> {
 }
 
 async function getCustomers(): Promise<AdminCustomer[]> {
-  const fallback: AdminCustomer[] = [
-    {
-      id: "cust_001",
-      name: "김민수",
-      totalSpent: 182000,
-      refillCount: 12,
-      co2SavedKg: 3.2,
-      grade: "Green",
-      lastVisit: new Date().toISOString(),
-    },
-  ];
+  const fallback: AdminCustomer[] = [];
   try {
     const res = await fetch(`${getBaseUrl()}/api/admin/customers`, { cache: "no-store" });
     if (!res.ok) return fallback;
-    return res.json();
+    const customers: Customer[] = await res.json();
+    // TODO: customer_loyalty 정보도 함께 조회해야 함
+    return customers.map((c) => ({ ...c, loyalty: undefined }));
   } catch {
     return fallback;
   }
@@ -152,18 +133,24 @@ export default async function AdminDashboardPage() {
             <thead className="text-xs text-slate-500">
               <tr>
                 <th className="px-2 py-2">상품명</th>
-                <th className="px-2 py-2">재고(ml)</th>
-                <th className="px-2 py-2">단가(원/ml)</th>
-                <th className="px-2 py-2">상태</th>
+                <th className="px-2 py-2">카테고리</th>
+                <th className="px-2 py-2">가격</th>
+                <th className="px-2 py-2">탄소 배출량</th>
               </tr>
             </thead>
             <tbody>
               {products.map((p: AdminProduct) => (
                 <tr key={p.id} className="border-t">
-                  <td className="px-2 py-2">{p.name}</td>
-                  <td className="px-2 py-2">{p.stockMl}</td>
-                  <td className="px-2 py-2">{p.unitPricePerMl}</td>
-                  <td className="px-2 py-2">{p.status}</td>
+                  <td className="px-2 py-2">{p.name || "상품명 없음"}</td>
+                  <td className="px-2 py-2">{p.category || "-"}</td>
+                  <td className="px-2 py-2">
+                    {p.current_price ? formatCurrency(p.current_price) : "-"}
+                  </td>
+                  <td className="px-2 py-2">
+                    {p.current_carbon_emission !== null
+                      ? `${p.current_carbon_emission.toFixed(3)} kg`
+                      : "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -179,11 +166,9 @@ export default async function AdminDashboardPage() {
             <thead className="text-xs text-slate-500">
               <tr>
                 <th className="px-2 py-2">고객</th>
-                <th className="px-2 py-2">구매액</th>
-                <th className="px-2 py-2">리필 횟수</th>
-                <th className="px-2 py-2">CO₂(kg)</th>
-                <th className="px-2 py-2">등급</th>
-                <th className="px-2 py-2">최근 방문</th>
+                <th className="px-2 py-2">이름</th>
+                <th className="px-2 py-2">가입일</th>
+                <th className="px-2 py-2">카카오 ID</th>
               </tr>
             </thead>
             <tbody>
@@ -194,14 +179,16 @@ export default async function AdminDashboardPage() {
                       href={`/admin/customers/${c.id}`}
                       className="text-emerald-700 hover:underline"
                     >
-                      {c.name}
+                      {c.id}
                     </Link>
                   </td>
-                  <td className="px-2 py-2">{formatCurrency(c.totalSpent)}</td>
-                  <td className="px-2 py-2">{c.refillCount}</td>
-                  <td className="px-2 py-2">{c.co2SavedKg}</td>
-                  <td className="px-2 py-2">{c.grade}</td>
-                  <td className="px-2 py-2">{new Date(c.lastVisit).toLocaleString("ko-KR")}</td>
+                  <td className="px-2 py-2">{c.name || "-"}</td>
+                  <td className="px-2 py-2">
+                    {c.created_at
+                      ? new Date(c.created_at).toLocaleString("ko-KR")
+                      : "-"}
+                  </td>
+                  <td className="px-2 py-2">{c.kakao_id || "-"}</td>
                 </tr>
               ))}
             </tbody>

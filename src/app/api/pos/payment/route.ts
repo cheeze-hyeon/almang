@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseClient } from "@/lib/supabase-client";
+import type { CartItem } from "@/types/cart";
+import type { ReceiptItem } from "@/types/receipt";
 
 /**
- * 오프라인 결제 후, 스마트 영수증 발송 및 서버 기록용 mock API
+ * 오프라인 결제 후, 스마트 영수증 발송 및 서버 기록용 API
  */
 export async function POST(request: NextRequest) {
   try {
@@ -17,27 +20,76 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "결제 금액이 올바르지 않습니다." }, { status: 400 });
     }
 
-    // ✅ 영수증 mock 데이터 생성
-    const receipt = {
-      id: `rcpt_${Date.now()}`,
-      customerId,
-      items,
-      totalAmount,
-      paidAt: new Date().toISOString(),
-      method: "offline-pos", // 실제 결제는 오프라인
-    };
+    const customerIdNum = typeof customerId === "string" ? parseInt(customerId, 10) : customerId;
+    if (isNaN(customerIdNum)) {
+      return NextResponse.json({ error: "유효하지 않은 고객 ID입니다." }, { status: 400 });
+    }
 
-    // ✅ TODO: 추후 Supabase 연동 시 실제 DB 저장
-    // await supabase.from("receipts").insert(receipt);
-    // await supabase.rpc("update_customer_stats", { customerId, amount: totalAmount });
+    // Receipt 생성
+    const { data: receipt, error: receiptError } = await supabaseClient
+      .from("receipt")
+      .insert({
+        customer_id: customerIdNum,
+        visit_date: new Date().toISOString(),
+        total_amount: totalAmount,
+      })
+      .select()
+      .single();
 
-    console.log("💾 [Mock Receipt Saved]", receipt);
+    if (receiptError) {
+      console.error("Supabase error (receipt):", receiptError);
+      return NextResponse.json(
+        { error: "영수증 저장 중 오류가 발생했습니다." },
+        { status: 500 },
+      );
+    }
+
+    // ReceiptItem 생성
+    const receiptItems = await Promise.all(
+      items.map(async (item: CartItem) => {
+        // Product 정보 조회 (carbon emission 계산을 위해)
+        const { data: product } = await supabaseClient
+          .from("product")
+          .select("current_carbon_emission")
+          .eq("id", typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId)
+          .single();
+
+        const carbonEmissionPerMl = product?.current_carbon_emission
+          ? product.current_carbon_emission / 1000 // kg/ml로 변환 (가정: 1L = 1000ml 기준)
+          : null;
+
+        const { data: receiptItem, error: itemError } = await supabaseClient
+          .from("receipt_item")
+          .insert({
+            receipt_id: receipt.id,
+            product_id: typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId,
+            purchase_quantity_ml: item.volumeMl,
+            purchase_unit_price_원_per_ml: item.unitPricePerMl,
+            purchase_carbon_emission_base_kg_per_ml: carbonEmissionPerMl,
+            total_carbon_emission_kg: carbonEmissionPerMl
+              ? (carbonEmissionPerMl * item.volumeMl) / 1000
+              : null,
+          })
+          .select()
+          .single();
+
+        if (itemError) {
+          console.error("Supabase error (receipt_item):", itemError);
+          throw itemError;
+        }
+
+        return receiptItem as ReceiptItem;
+      }),
+    );
 
     return NextResponse.json(
       {
         success: true,
         message: "결제 내역이 저장되었습니다. (오프라인 결제)",
-        receipt,
+        receipt: {
+          id: receipt.id,
+          createdAt: receipt.visit_date,
+        },
       },
       { status: 201 },
     );
