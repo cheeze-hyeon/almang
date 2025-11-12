@@ -1,9 +1,8 @@
 export interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  totalSpent: number;
-  refillCount: number;
-  co2SavedKg: number;
-  grade: string;
+  id: number;
+  created_at: Date | string;
+  name: string | null;
+  kakao_id: string | null;
+  gender: string | null; // USER-DEFINED type
+  birth_date: Date | string | null;
 }

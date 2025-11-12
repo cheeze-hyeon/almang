@@ -1,17 +1,16 @@
 export type ReceiptItem = {
-  id: string;
-  productId: string;
-  name: string;
-  volumeMl: number;
-  unitPricePerMl: number; // 원/ml
-  amount: number; // 원
-  discount?: number; // 원, optional
+  id: number;
+  receipt_id: number | null;
+  product_id: number | null;
+  purchase_quantity_ml: number | null;
+  purchase_unit_price_원_per_ml: number | null;
+  purchase_carbon_emission_base_kg_per_ml: number | null;
+  total_carbon_emission_kg: number | null;
 };
 
 export type Receipt = {
-  id: string;
-  customerId?: string | null;
-  paidAt: string; // ISO string
-  totalAmount: number; // 원
-  items: ReceiptItem[];
+  id: number;
+  customer_id: number | null;
+  visit_date: Date | string | null;
+  total_amount: number | null;
 };
