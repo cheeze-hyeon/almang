@@ -11,9 +11,9 @@ export default function Header() {
 
   return (
     <header className="w-full bg-[#F2F2F7] px-4 md:px-8 py-4 md:py-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {/* 좌측: 로고 + 상점명 + 날짜 */}
-        <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
+        {/* 왼쪽: 로고 + 상점명 + 날짜 */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           {/* 로고 */}
           <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center shadow-sm">
             <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-500 via-blue-500 to-white flex items-center justify-center">
@@ -28,16 +28,16 @@ export default function Header() {
           </div>
         </div>
 
-        {/* 우측: 검색바 */}
-        <div className="flex-1 md:flex-initial md:max-w-md">
+        {/* 검색창 - 왼쪽으로 이동 */}
+        <div className="flex-1 md:max-w-[calc(28rem-60px)] ml-auto">
           <div className="relative">
             <input
               type="text"
               placeholder="상품 검색"
-              className="w-full px-4 py-2.5 md:py-3 pl-10 rounded-lg bg-white border border-gray-200 text-sm md:text-base text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#70bce8] focus:border-transparent"
+              className="w-full px-4 py-2.5 md:py-3 pl-10 rounded-lg bg-[#E3E3E8] border-0 text-sm md:text-base text-[#e75251] placeholder:text-[#e75251] focus:outline-none focus:ring-2 focus:ring-[#e75251] focus:border-transparent"
             />
             <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-[#e75251]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -55,4 +55,3 @@ export default function Header() {
     </header>
   );
 }
-

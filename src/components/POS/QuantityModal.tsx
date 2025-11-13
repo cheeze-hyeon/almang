@@ -1,30 +1,26 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export type Unit = "ml" | "g";
+export type Unit = "g";
 
 export default function QuantityModal({
   open,
   onClose,
   onConfirm,
-  defaultUnit = "ml",
   unitPrice,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: (v: { volume: number; unit: Unit }) => void;
-  defaultUnit?: Unit;
   unitPrice: number;
 }) {
-  const [unit, setUnit] = useState<Unit>(defaultUnit);
   const [vol, setVol] = useState<number>(100);
 
   useEffect(() => {
     if (open) {
-      setUnit(defaultUnit);
       setVol(100);
     }
-  }, [open, defaultUnit]);
+  }, [open]);
 
   if (!open) return null;
   const price = vol * (unitPrice || 0);
@@ -40,53 +36,32 @@ export default function QuantityModal({
         </div>
 
         <div className="p-5 space-y-4">
-          <div className="flex gap-2">
-            {/* 용량 */}
-            <div className="flex-1">
-              <label className="block text-sm text-slate-600 mb-1">용량</label>
-              <div className="flex items-center rounded-lg border">
-                <button
-                  onClick={() => setVol((v) => Math.max(0, v - 50))}
-                  className="px-3 py-2 text-lg"
-                  aria-label="감소"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min={0}
-                  step={1} // ✅ 1단위 입력 가능
-                  value={vol}
-                  onChange={(e) => setVol(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-full px-3 py-2 outline-none text-right"
-                />
-                <button
-                  onClick={() => setVol((v) => v + 50)}
-                  className="px-3 py-2 text-lg"
-                  aria-label="증가"
-                >
-                  ＋
-                </button>
-              </div>
-            </div>
-
-            {/* 단위 */}
-            <div>
-              <label className="block text-sm text-slate-600 mb-1">단위</label>
-              <div className="flex rounded-lg overflow-hidden border">
-                <button
-                  onClick={() => setUnit("ml")}
-                  className={`px-4 py-2 ${unit === "ml" ? "bg-slate-900 text-white" : "bg-white"}`}
-                >
-                  ml
-                </button>
-                <button
-                  onClick={() => setUnit("g")}
-                  className={`px-4 py-2 ${unit === "g" ? "bg-slate-900 text-white" : "bg-white"}`}
-                >
-                  g
-                </button>
-              </div>
+          {/* 용량 */}
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">용량 (g)</label>
+            <div className="flex items-center rounded-lg border">
+              <button
+                onClick={() => setVol((v) => Math.max(0, v - 50))}
+                className="px-3 py-2 text-lg"
+                aria-label="감소"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={vol}
+                onChange={(e) => setVol(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full px-3 py-2 outline-none text-right"
+              />
+              <button
+                onClick={() => setVol((v) => v + 50)}
+                className="px-3 py-2 text-lg"
+                aria-label="증가"
+              >
+                ＋
+              </button>
             </div>
           </div>
 
@@ -102,7 +77,7 @@ export default function QuantityModal({
           </button>
           <button
             onClick={() => {
-              onConfirm({ volume: vol, unit });
+              onConfirm({ volume: vol, unit: "g" });
               onClose();
             }}
             disabled={vol <= 0}

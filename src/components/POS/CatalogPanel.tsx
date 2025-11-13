@@ -35,36 +35,39 @@ export default function CatalogPanel({
   // ✅ 카테고리 필터링
   const filtered = normalized.filter((p) => p.category === activeCat);
 
-  const formatUnitPrice = (price: number, measureUnit: "ml" | "g" | null) => {
-    const unit = measureUnit || "g";
-    return `${Math.round(price)}원/${unit}`;
+  const formatUnitPrice = (price: number) => {
+    return `${Math.round(price)}원/g`;
   };
 
   return (
     <div className="w-full pl-2 md:pl-3 lg:pl-4">
       {/* 상단 카테고리 탭 */}
-      <div className="mb-8 md:mb-12 relative">
-        <div className="flex flex-wrap gap-4 md:gap-6 lg:gap-8 pb-2 overflow-x-auto">
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
-            const isActive = activeCat === key;
-            return (
-              <div key={key} className="h-[33px] relative flex-shrink-0">
-                <button
-                  onClick={() => onChangeCat(key as ProductCategory)}
-                  className={`text-sm font-semibold text-left whitespace-nowrap ${
-                    isActive ? "text-[#e75251]" : "text-black"
-                  }`}
-                >
-                  {label}
-                </button>
-                {isActive && (
-                  <div className="absolute left-0 right-0 top-[30px] h-0.5 bg-[#E75251]"></div>
-                )}
-              </div>
-            );
-          })}
+      <div className="mb-6 md:mb-8">
+        <div className="relative">
+          <div className="overflow-x-auto pb-2 -mx-2 md:-mx-3 lg:-mx-4 px-2 md:px-3 lg:px-4 scrollbar-hide">
+            <div className="flex gap-4 md:gap-6 lg:gap-8 min-w-max">
+              {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+                const isActive = activeCat === key;
+                return (
+                  <div key={key} className="h-[33px] relative flex-shrink-0">
+                    <button
+                      onClick={() => onChangeCat(key as ProductCategory)}
+                      className={`text-sm font-semibold text-left whitespace-nowrap ${
+                        isActive ? "text-[#e75251]" : "text-black"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                    {isActive && (
+                      <div className="absolute left-0 right-0 top-[30px] h-0.5 bg-[#E75251]"></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="absolute left-0 right-0 top-[32px] h-px bg-[#393C49] pointer-events-none"></div>
         </div>
-        <div className="absolute left-0 right-0 top-[32px] h-px bg-[#393C49]"></div>
       </div>
 
       {/* 상품 카드 그리드 */}
@@ -73,8 +76,8 @@ export default function CatalogPanel({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-7">
           {filtered.map((p) => {
-            // current_price는 이미 ml당 단가이므로 그대로 사용
-            const unitPricePerMl = p.current_price || 0;
+            // current_price는 g당 단가
+            const unitPricePerG = p.current_price || 0;
             return (
               <button
                 key={p.id}
@@ -102,7 +105,7 @@ export default function CatalogPanel({
 
                 {/* 단가 */}
                 <p className="text-sm text-black text-center mt-auto">
-                  {formatUnitPrice(unitPricePerMl, p.measure_unit)}
+                  {formatUnitPrice(unitPricePerG)}
                 </p>
               </button>
             );

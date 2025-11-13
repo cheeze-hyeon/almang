@@ -49,6 +49,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
       <section className="space-y-3">
         {receipt.items?.map((item) => {
+          // DB 필드명은 ml이지만 실제 값은 g 단위
           const quantity = item.purchase_quantity_ml || 0;
           const unitPrice = item.purchase_unit_price_원_per_ml || 0;
           const amount = quantity * unitPrice;
@@ -58,7 +59,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
                 <div>
                   <p className="font-semibold text-slate-900">{item.name || `상품 ${item.product_id}`}</p>
                   <p className="text-xs text-slate-500">
-                    용량 {quantity} ml · 단가 {unitPrice.toLocaleString()} 원/ml
+                    용량 {quantity} g · 단가 {unitPrice.toLocaleString()} 원/g
                   </p>
                 </div>
                 <p className="text-sm font-medium text-slate-900">{formatCurrency(amount)}</p>
