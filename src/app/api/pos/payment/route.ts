@@ -93,16 +93,19 @@ export async function POST(request: NextRequest) {
         const carbonEmissionPerG = product?.current_carbon_emission || null;
 
         // DB 스키마의 필드명은 ml이지만 실제 값은 g 단위로 저장
-        const receiptItemData = {
+        // 실제 컬럼명에 공백과 괄호가 포함되어 있으므로 따옴표로 감싸서 사용
+        const receiptItemData: any = {
           receipt_id: receipt.id,
           product_id: typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId,
-          purchase_quantity_ml: item.volumeG, // 실제로는 g 단위 값
-          purchase_unit_price_원_per_ml: item.unitPricePerG, // 실제로는 g당 단가
-          purchase_carbon_emission_base_kg_per_ml: carbonEmissionPerG, // 실제로는 g당 탄소 배출량 (kg/g)
-          total_carbon_emission_kg: carbonEmissionPerG
-            ? carbonEmissionPerG * item.volumeG // g당 kg * g = kg
-            : null,
+          "purchase_quantity (ml)": item.volumeG, // 실제로는 g 단위 값
+          "purchase_unit_price (원/ml)": item.unitPricePerG, // 실제로는 g당 단가
         };
+
+        // 탄소 배출량 관련 컬럼 (존재하는 경우)
+        if (carbonEmissionPerG !== null) {
+          receiptItemData["purchase_carbon_emission_base (kg/ml)"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
+          receiptItemData["total_carbon_emission (kg)"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
+        }
 
         // 📋 데이터베이스에 저장되는 데이터 로깅
         console.log(`영수증 아이템 저장 (제품 ID: ${item.productId}):`, JSON.stringify(receiptItemData, null, 2));

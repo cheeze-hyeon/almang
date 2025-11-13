@@ -6,9 +6,12 @@ type ReceiptWithItems = Receipt & {
   items: Array<{
     id: number;
     product_id: number | null;
-    purchase_quantity_ml: number | null;
-    purchase_unit_price_원_per_ml: number | null;
+    "purchase_quantity (ml)": number | null;
+    "purchase_unit_price (원/ml)": number | null;
     name?: string;
+    // 호환성을 위한 별칭
+    purchase_quantity_ml?: number | null;
+    purchase_unit_price_원_per_ml?: number | null;
   }>;
 };
 
@@ -50,8 +53,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
       <section className="space-y-3">
         {receipt.items?.map((item) => {
           // DB 필드명은 ml이지만 실제 값은 g 단위
-          const quantity = item.purchase_quantity_ml || 0;
-          const unitPrice = item.purchase_unit_price_원_per_ml || 0;
+          const quantity = item["purchase_quantity (ml)"] || item.purchase_quantity_ml || 0;
+          const unitPrice = item["purchase_unit_price (원/ml)"] || item.purchase_unit_price_원_per_ml || 0;
           const amount = quantity * unitPrice;
           return (
             <article key={item.id} className="rounded-lg border border-slate-200 bg-white p-4">
